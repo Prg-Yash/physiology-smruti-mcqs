@@ -161,6 +161,95 @@
             font-size: 1rem;
         }
 
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .mode-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.75rem;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+
+        .mode-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .mode-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .mode-card.random::before {
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+        }
+
+        .mode-card.test::before {
+            background: linear-gradient(90deg, #0f172a, #3b82f6);
+        }
+
+        .mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .mode-card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.6rem;
+        }
+
+        .mode-card p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .mode-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .mode-count {
+            color: #3b82f6;
+        }
+
         .categories-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -407,6 +496,43 @@
         </div>
 
         <div class="categories-grid" id="categoriesGrid"></div>
+
+        <div class="section-header" style="margin-top: 3rem;">
+            <h2>Practice Mode</h2>
+            <p>Mixed-question drills with a built-in timer</p>
+        </div>
+
+        <div class="mode-grid">
+            <a class="mode-card random" href="quiz.html?mode=random">
+                <div class="mode-badge">Practice</div>
+                <h3>Random Practice</h3>
+                <p>A mixed practice set pulled from all categories to help you drill broadly and quickly.</p>
+                <div class="mode-meta">
+                    <span>All categories mixed</span>
+                    <span class="mode-count">20 Questions</span>
+                </div>
+            </a>
+
+            <a class="mode-card test" href="quiz.html?mode=test">
+                <div class="mode-badge">Practice</div>
+                <h3>Test Mode</h3>
+                <p>A longer timed mixed test that simulates a real exam environment.</p>
+                <div class="mode-meta">
+                    <span>All categories mixed</span>
+                    <span class="mode-count">50 Questions</span>
+                </div>
+            </a>
+
+            <a class="mode-card test" href="quiz.html?mode=strict">
+                <div class="mode-badge">Practice</div>
+                <h3>Strict Test Mode</h3>
+                <p>A tougher mixed test with a strict 30 minute overall timer for real exam-style pressure.</p>
+                <div class="mode-meta">
+                    <span>All categories mixed</span>
+                    <span class="mode-count">50 Questions · 30 Minutes</span>
+                </div>
+            </a>
+        </div>
 
         <div class="no-categories" id="emptyState">
             <div class="no-categories-icon">📭</div>

@@ -130,7 +130,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1.5rem;
             margin: 2rem 0;
         }
@@ -307,6 +307,10 @@
             color: #64748b;
         }
 
+        .stat-box.time h3 {
+            color: #1e40af;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 2rem 1rem;
@@ -465,6 +469,10 @@
                     <h3 id="totalCount">0</h3>
                     <p>Total</p>
                 </div>
+                <div class="stat-box time">
+                    <h3 id="timeTaken">00:00</h3>
+                    <p>Time</p>
+                </div>
             </div>
 
             <div class="performance-message" id="performanceMessage">
@@ -492,7 +500,15 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         const category = params.get('category');
+        const mode = params.get('mode');
         const resultStoragePrefix = 'quizResult:';
+
+        function formatTime(seconds) {
+            const totalSeconds = Math.max(0, Math.floor(seconds || 0));
+            const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+            const remainingSeconds = String(totalSeconds % 60).padStart(2, '0');
+            return `${minutes}:${remainingSeconds}`;
+        }
 
         function updatePerformanceMessage(percentage) {
             const messageDiv = document.getElementById('performanceMessage');
@@ -572,18 +588,30 @@
         function loadResults() {
             const title = document.getElementById('categoryTitle');
             const retakeBtn = document.getElementById('retakeBtn');
+            const storageKey = category || mode || 'quiz';
 
-            if (!category) {
+            if (!category && !mode) {
                 title.textContent = 'Category not selected';
                 retakeBtn.href = 'index.html';
                 showEmptyState('No category specified. Go back and start a quiz.');
                 return;
             }
 
-            title.textContent = category;
-            retakeBtn.href = `quiz.html?category=${encodeURIComponent(category)}`;
+            if (mode === 'random') {
+                title.textContent = 'Random Practice';
+                retakeBtn.href = 'quiz.html?mode=random';
+            } else if (mode === 'test') {
+                title.textContent = 'Test Mode';
+                retakeBtn.href = 'quiz.html?mode=test';
+            } else if (mode === 'strict') {
+                title.textContent = 'Strict Test Mode';
+                retakeBtn.href = 'quiz.html?mode=strict';
+            } else {
+                title.textContent = category;
+                retakeBtn.href = `quiz.html?category=${encodeURIComponent(category)}`;
+            }
 
-            const raw = localStorage.getItem(`${resultStoragePrefix}${category}`);
+            const raw = localStorage.getItem(`${resultStoragePrefix}${storageKey}`);
             if (!raw) {
                 showEmptyState('No saved result found for this category. Start the quiz to see your score here.');
                 return;
@@ -602,6 +630,7 @@
             document.getElementById('correctCount').textContent = data.score || 0;
             document.getElementById('incorrectCount').textContent = (data.total || 0) - (data.score || 0);
             document.getElementById('totalCount').textContent = data.total || 0;
+            document.getElementById('timeTaken').textContent = formatTime(data.elapsed_seconds || 0);
 
             updatePerformanceMessage(data.percentage || 0);
             showAnswerReview(data.answers || []);

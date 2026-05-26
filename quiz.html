@@ -87,6 +87,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .progress-text {
@@ -99,6 +101,32 @@
             font-size: 1.25rem;
             font-weight: 700;
             color: #3b82f6;
+        }
+
+        .timer-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.85rem;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .timer-chip span:last-child {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-chip.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .timer-chip.danger {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .progress-bar {
@@ -468,7 +496,13 @@
             <h1 class="category-title" id="categoryTitle">Category</h1>
             <div class="progress-info">
                 <div class="progress-text" id="progressText">Question 1 of ?</div>
-                <div class="progress-percentage" id="progressPercentage">0%</div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; justify-content: flex-end;">
+                    <div class="progress-percentage" id="progressPercentage">0%</div>
+                    <div class="timer-chip" aria-live="polite">
+                        <span>⏱</span>
+                        <span id="timerText">00:00</span>
+                    </div>
+                </div>
             </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressBar"></div>
@@ -498,6 +532,7 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         const category = params.get('category');
+        const mode = params.get('mode');
         const resultStoragePrefix = 'quizResult:';
 
         let questions = [];
@@ -506,6 +541,87 @@
         let answered = false;
         let score = 0;
         let answers = [];
+        let startTime = 0;
+        let timerInterval = null;
+
+        const MODE_LIMITS = {
+            random: 20,
+            test: 50,
+            strict: 50
+        };
+
+        const MODE_LABELS = {
+            random: 'Random Practice',
+            test: 'Test Mode',
+            strict: 'Strict Test Mode'
+        };
+
+        const MODE_TIME_LIMITS = {
+            random: 0,
+            test: 0,
+            strict: 30 * 60
+        };
+
+        function shuffleArray(items) {
+            const result = [...items];
+            for (let i = result.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [result[i], result[j]] = [result[j], result[i]];
+            }
+            return result;
+        }
+
+        function formatTime(seconds) {
+            const totalSeconds = Math.max(0, Math.floor(seconds));
+            const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+            const remainingSeconds = String(totalSeconds % 60).padStart(2, '0');
+            return `${minutes}:${remainingSeconds}`;
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            const initialLimit = MODE_TIME_LIMITS[mode] || 0;
+            document.getElementById('timerText').textContent = initialLimit > 0 ? formatTime(initialLimit) : '00:00';
+
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+
+            timerInterval = setInterval(() => {
+                const elapsedSeconds = (Date.now() - startTime) / 1000;
+                const limit = MODE_TIME_LIMITS[mode] || 0;
+                const timerChip = document.querySelector('.timer-chip');
+
+                if (limit > 0) {
+                    const remaining = Math.max(0, limit - elapsedSeconds);
+                    document.getElementById('timerText').textContent = formatTime(remaining);
+
+                    timerChip.classList.remove('warning', 'danger');
+                    if (remaining <= 300) {
+                        timerChip.classList.add('danger');
+                    } else if (remaining <= 600) {
+                        timerChip.classList.add('warning');
+                    }
+
+                    if (remaining <= 0) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        saveResultAndGoToResults();
+                    }
+                } else {
+                    document.getElementById('timerText').textContent = formatTime(elapsedSeconds);
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            const elapsedSeconds = (Date.now() - startTime) / 1000;
+            return elapsedSeconds;
+        }
 
         function showError(message) {
             document.getElementById('quizContainer').style.display = 'none';
@@ -608,18 +724,34 @@
         }
 
         function saveResultAndGoToResults() {
+            if (window.__quizFinished) {
+                return;
+            }
+            window.__quizFinished = true;
+
             const total = questions.length;
             const percentage = total > 0 ? Number(((score / total) * 100).toFixed(2)) : 0;
+            const elapsedSeconds = stopTimer();
+            const storageKey = category || mode || 'quiz';
             const result = {
                 category,
+                mode,
                 score,
                 total,
                 percentage,
+                elapsed_seconds: Math.round(elapsedSeconds),
                 answers,
                 completed_at: new Date().toISOString()
             };
-            localStorage.setItem(`${resultStoragePrefix}${category}`, JSON.stringify(result));
-            window.location.href = `results.html?category=${encodeURIComponent(category)}`;
+            localStorage.setItem(`${resultStoragePrefix}${storageKey}`, JSON.stringify(result));
+            const destinationParams = new URLSearchParams();
+            if (category) {
+                destinationParams.set('category', category);
+            }
+            if (mode) {
+                destinationParams.set('mode', mode);
+            }
+            window.location.href = `results.html?${destinationParams.toString()}`;
         }
 
         function nextQuestion() {
@@ -632,12 +764,19 @@
         }
 
         async function init() {
-            if (!category) {
+            if (!category && !mode) {
                 showError('No category selected. Please choose a category from the home page.');
                 return;
             }
 
-            document.getElementById('categoryTitle').textContent = category;
+            const isPracticeMode = mode === 'random' || mode === 'test';
+            const isStrictMode = mode === 'strict';
+            const isAnyPracticeMode = isPracticeMode || isStrictMode;
+            const limit = isPracticeMode ? MODE_LIMITS[mode] : null;
+            const practiceLabel = MODE_LABELS[mode];
+            document.getElementById('categoryTitle').textContent = isAnyPracticeMode
+                ? (mode === 'strict' ? 'Strict Test Mode · 30 Minutes' : practiceLabel)
+                : category;
 
             try {
                 const response = await fetch('mcqs_data.json');
@@ -648,14 +787,23 @@
                 const data = await response.json();
                 const mcqsByCategory = data.mcqs || {};
 
-                // Support an aggregated "All" category client-side without changing the JSON file.
-                if (category === 'All') {
-                    const cats = Object.keys(mcqsByCategory).filter(k => k !== 'All');
-                    if (cats.length === 0) {
+                const allCategories = Object.keys(mcqsByCategory).filter(k => k !== 'All');
+                let pool = [];
+
+                if (isAnyPracticeMode) {
+                    if (!allCategories.length) {
                         showError('Selected category has no questions or does not exist.');
                         return;
                     }
-                    questions = cats.reduce((acc, c) => acc.concat(mcqsByCategory[c] || []), []);
+                    pool = allCategories.reduce((acc, c) => acc.concat(mcqsByCategory[c] || []), []);
+                    const targetCount = MODE_LIMITS[mode] || 0;
+                    questions = shuffleArray(pool).slice(0, Math.min(targetCount, pool.length));
+                } else if (category === 'All') {
+                    if (!allCategories.length) {
+                        showError('Selected category has no questions or does not exist.');
+                        return;
+                    }
+                    questions = allCategories.reduce((acc, c) => acc.concat(mcqsByCategory[c] || []), []);
                 } else {
                     if (!mcqsByCategory[category] || mcqsByCategory[category].length === 0) {
                         showError('Selected category has no questions or does not exist.');
@@ -663,7 +811,10 @@
                     }
                     questions = mcqsByCategory[category];
                 }
+
+                document.getElementById('progressText').textContent = `Question 1 of ${questions.length}`;
                 showQuiz();
+                startTimer();
                 renderQuestion();
             } catch (error) {
                 console.error(error);
