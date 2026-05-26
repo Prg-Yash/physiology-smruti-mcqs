@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - {{ category }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #3b82f6;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* Container */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .category-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-text {
+            font-size: 0.95rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .progress-percentage {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        /* Quiz Card */
+        .quiz-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .question-number {
+            display: inline-block;
+            background: #eff6ff;
+            color: #3b82f6;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .question {
+            font-size: 1.35rem;
+            color: #0f172a;
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+            font-weight: 500;
+        }
+
+        /* Options */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .option {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.05rem;
+            color: #334155;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .option::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .option:hover {
+            background: #f1f5f9;
+            border-color: #3b82f6;
+        }
+
+        .option.selected {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+
+        .option.selected::before {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            box-shadow: inset 0 0 0 3px white;
+        }
+
+        .option.correct {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .option.correct::before {
+            content: '✓';
+            border: none;
+            background: #22c55e;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .option.incorrect {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .option.incorrect::before {
+            content: '✕';
+            border: none;
+            background: #ef4444;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+        }
+
+        .feedback.incorrect {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+        }
+
+        .feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-icon {
+            font-size: 1.5rem;
+        }
+
+        .feedback h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .feedback.correct h3 {
+            color: #166534;
+        }
+
+        .feedback.incorrect h3 {
+            color: #991b1b;
+        }
+
+        .feedback p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-left: 2.25rem;
+        }
+
+        /* Buttons */
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .quiz-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .question {
+                font-size: 1.15rem;
+            }
+
+            .option {
+                padding: 1rem;
+                font-size: 0.95rem;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .progress-section {
+                padding: 1.5rem;
+            }
+
+            .category-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .quiz-card {
+                padding: 1.5rem 1rem;
+                border-radius: 12px;
+            }
+
+            .progress-section {
+                padding: 1rem;
+                border-radius: 12px;
+            }
+
+            .category-title {
+                font-size: 1.25rem;
+            }
+
+            .question-number {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .question {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .option {
+                padding: 0.875rem;
+                font-size: 0.9rem;
+            }
+
+            .option::before {
+                width: 18px;
+                height: 18px;
+            }
+
+            .btn {
+                padding: 0.875rem 1.5rem;
+                font-size: 0.95rem;
+            }
+
+            .feedback {
+                padding: 1rem;
+            }
+
+            .feedback h3 {
+                font-size: 1.1rem;
+            }
+
+            .back-link {
+                font-size: 0.9rem;
+            }
+
+            .logo {
+                font-size: 1.1rem;
+            }
+
+            .progress-text,
+            .progress-percentage {
+                font-size: 0.85rem;
+            }
+
+            .progress-percentage {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="back-link">
+                <span>←</span>
+                <span>Back to Categories</span>
+            </a>
+            <div class="logo">QuizMaster</div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="progress-section">
+            <h1 class="category-title">{{ category }}</h1>
+            <div class="progress-info">
+                <div class="progress-text" id="progressText">Question 1 of ?</div>
+                <div class="progress-percentage" id="progressPercentage">0%</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="quiz-card">
+            <div class="question-number" id="questionNumber">Question 1</div>
+            <div class="question" id="question">Loading question...</div>
+            <div class="options" id="options"></div>
+            <div class="feedback" id="feedback"></div>
+            <div class="buttons">
+                <button class="btn btn-primary" id="submitBtn" disabled>Submit Answer</button>
+                <button class="btn btn-secondary" id="nextBtn" style="display: none;">Next Question →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const category = "{{ category }}";
+        let currentQuestion = 0;
+        let totalQuestions = 0;
+        let selectedAnswer = null;
+        let answered = false;
+
+        async function loadQuestion() {
+            try {
+                const response = await fetch(`/api/question/${category}/${currentQuestion}`);
+                const data = await response.json();
+
+                totalQuestions = data.total_questions;
+                
+                // Update question
+                document.getElementById('questionNumber').textContent = `Question ${currentQuestion + 1}`;
+                document.getElementById('question').textContent = data.question;
+
+                // Update progress
+                const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressText').textContent = 
+                    `Question ${currentQuestion + 1} of ${totalQuestions}`;
+                document.getElementById('progressPercentage').textContent = 
+                    Math.round(progress) + '%';
+
+                // Create options
+                const optionsContainer = document.getElementById('options');
+                optionsContainer.innerHTML = '';
+                
+                data.options.forEach((option, index) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'option';
+                    optionDiv.textContent = option;
+                    optionDiv.onclick = () => selectOption(index);
+                    optionDiv.dataset.index = index;
+                    optionsContainer.appendChild(optionDiv);
+                });
+
+                // Reset state
+                selectedAnswer = null;
+                answered = false;
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('submitBtn').style.display = 'block';
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('feedback').classList.remove('show');
+
+            } catch (error) {
+                console.error('Error loading question:', error);
+            }
+        }
+
+        function selectOption(index) {
+            if (answered) return;
+
+            selectedAnswer = index;
+            
+            // Update UI
+            document.querySelectorAll('.option').forEach((opt, i) => {
+                opt.classList.remove('selected');
+                if (i === index) {
+                    opt.classList.add('selected');
+                }
+            });
+
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        async function submitAnswer() {
+            if (selectedAnswer === null || answered) return;
+
+            answered = true;
+
+            try {
+                const response = await fetch('/api/check_answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        category: category,
+                        question_num: currentQuestion,
+                        selected_answer: selectedAnswer
+                    })
+                });
+
+                const data = await response.json();
+
+                // Update options
+                document.querySelectorAll('.option').forEach((opt, i) => {
+                    opt.classList.add('disabled');
+                    if (i === data.correct_answer) {
+                        opt.classList.add('correct');
+                    } else if (i === selectedAnswer && !data.is_correct) {
+                        opt.classList.add('incorrect');
+                    }
+                });
+
+                // Show feedback
+                const feedback = document.getElementById('feedback');
+                feedback.className = 'feedback show ' + (data.is_correct ? 'correct' : 'incorrect');
+                feedback.innerHTML = `
+                    <div class="feedback-header">
+                        <span class="feedback-icon">${data.is_correct ? '✓' : '✕'}</span>
+                        <h3>${data.is_correct ? 'Correct!' : 'Incorrect'}</h3>
+                    </div>
+                    ${!data.is_correct ? '<p>The correct answer is highlighted in green.</p>' : '<p>Great job! Keep it up.</p>'}
+                `;
+
+                // Update buttons
+                document.getElementById('submitBtn').style.display = 'none';
+                document.getElementById('nextBtn').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error submitting answer:', error);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion >= totalQuestions) {
+                window.location.href = `/results/${category}`;
+            } else {
+                loadQuestion();
+            }
+        }
+
+        // Event listeners
+        document.getElementById('submitBtn').onclick = submitAnswer;
+        document.getElementById('nextBtn').onclick = nextQuestion;
+
+        // Load first question
+        loadQuestion();
+    </script>
+</body>
+</html>
