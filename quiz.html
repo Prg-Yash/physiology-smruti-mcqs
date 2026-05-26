@@ -647,12 +647,22 @@
 
                 const data = await response.json();
                 const mcqsByCategory = data.mcqs || {};
-                if (!mcqsByCategory[category] || mcqsByCategory[category].length === 0) {
-                    showError('Selected category has no questions or does not exist.');
-                    return;
-                }
 
-                questions = mcqsByCategory[category];
+                // Support an aggregated "All" category client-side without changing the JSON file.
+                if (category === 'All') {
+                    const cats = Object.keys(mcqsByCategory).filter(k => k !== 'All');
+                    if (cats.length === 0) {
+                        showError('Selected category has no questions or does not exist.');
+                        return;
+                    }
+                    questions = cats.reduce((acc, c) => acc.concat(mcqsByCategory[c] || []), []);
+                } else {
+                    if (!mcqsByCategory[category] || mcqsByCategory[category].length === 0) {
+                        showError('Selected category has no questions or does not exist.');
+                        return;
+                    }
+                    questions = mcqsByCategory[category];
+                }
                 showQuiz();
                 renderQuestion();
             } catch (error) {

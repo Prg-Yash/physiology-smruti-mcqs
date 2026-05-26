@@ -28,5 +28,4 @@ This project is ready for direct deployment on GitHub Pages.
 
 ## Notes
 
-- Flask files are still present for optional legacy/local use.
 - Because all data is client-side, correct answers can be inspected in browser devtools.

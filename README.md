@@ -71,10 +71,6 @@ Notes:
 }
 ```
 
-## Legacy Flask Mode (Optional)
-
-The old Flask app still exists (`app.py` + `templates/`) if you want server-rendered mode for local experiments.
-
 ## Project Files
 
 ```text
@@ -84,7 +80,5 @@ The old Flask app still exists (`app.py` + `templates/`) if you want server-rend
 ├── results.html
 ├── mcqs_data.json
 ├── .nojekyll
-├── app.py
-├── templates/
 └── README.md
 ```

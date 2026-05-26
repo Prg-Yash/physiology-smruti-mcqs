@@ -438,7 +438,9 @@
         }
 
         function renderCategories(mcqsByCategory) {
-            const categories = Object.keys(mcqsByCategory);
+            const ALL_KEY = 'All';
+            const rawCategories = Object.keys(mcqsByCategory);
+            const categories = rawCategories.filter(k => k !== ALL_KEY);
             const categoriesGrid = document.getElementById('categoriesGrid');
             const emptyState = document.getElementById('emptyState');
             const statsBar = document.getElementById('statsBar');
@@ -451,11 +453,29 @@
             const totalQuestions = categories.reduce((sum, category) => sum + mcqsByCategory[category].length, 0);
             const avg = Math.round(totalQuestions / categories.length);
 
-            document.getElementById('categoryCount').textContent = categories.length;
+            // Show counts: include the new aggregated "All" category in category count
+            document.getElementById('categoryCount').textContent = categories.length + 1;
             document.getElementById('questionCount').textContent = totalQuestions;
             document.getElementById('avgCount').textContent = avg;
             statsBar.style.display = 'block';
 
+            // Render an "All" card first which combines all categories client-side
+            const combinedCount = totalQuestions;
+            const allCard = document.createElement('a');
+            allCard.className = 'category-card';
+            allCard.href = `quiz.html?category=${encodeURIComponent(ALL_KEY)}`;
+            allCard.innerHTML = `
+                <div class="category-header">
+                    <div class="category-icon">📦</div>
+                </div>
+                <h3>${ALL_KEY}</h3>
+                <div class="category-meta">
+                    <div class="question-count">${combinedCount} Questions</div>
+                </div>
+            `;
+            categoriesGrid.appendChild(allCard);
+
+            // Then render individual categories (excluding any existing "All" key)
             categories.forEach((category) => {
                 const questionCount = mcqsByCategory[category].length;
                 const card = document.createElement('a');

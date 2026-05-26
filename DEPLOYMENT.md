@@ -38,6 +38,6 @@ python -m http.server 8080
 
 Then open http://localhost:8080.
 
-## Optional Legacy Flask Mode
+## Notes
 
-The old Flask app remains in app.py and templates/ for local experiments, but it is not needed for GitHub Pages.
+- This repository is static-only; the Flask server and templates have been removed.
