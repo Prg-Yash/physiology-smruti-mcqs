@@ -28,6 +28,7 @@ instance/
 .webassets-cache
 .flask_session/
 
+
 # IDE
 .vscode/
 .idea/
@@ -52,3 +53,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+
+
+*.py

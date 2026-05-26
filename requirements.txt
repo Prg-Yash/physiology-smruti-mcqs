@@ -1,2 +1,0 @@
-# No Python dependencies required for the static GitHub Pages build.
-# (This repository is static-only: use index.html / quiz.html / results.html)
